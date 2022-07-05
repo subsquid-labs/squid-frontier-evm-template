@@ -1,7 +1,7 @@
-import { assertNotNull, Store } from "@subsquid/substrate-evm-processor";
-import { ethers } from "ethers";
+import {assertNotNull, Store} from "@subsquid/substrate-evm-processor";
+import {ethers} from "ethers";
 import * as erc721 from "./abi/erc721";
-import { Contract } from "./model";
+import {Contract} from "./model";
 
 export const CHAIN_NODE = "wss://wss.api.moonriver.moonbeam.network";
 
@@ -44,13 +44,11 @@ async function timeout<T>(res: Promise<T>, seconds = 30): Promise<T> {
       reject(new Error(`Request timed out in ${seconds} seconds`));
     }, seconds * 1000);
 
-    res
-      .finally(() => {
-        if (timer != null) {
-          clearTimeout(timer);
-        }
-      })
-      .then(resolve, reject);
+    res.finally(() => {
+      if (timer != null) {
+        clearTimeout(timer);
+      }
+    }).then(resolve, reject);
   });
 }
 
