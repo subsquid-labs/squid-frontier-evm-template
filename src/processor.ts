@@ -3,7 +3,7 @@ import {
   SubstrateEvmProcessor,
 } from "@subsquid/substrate-evm-processor";
 import { lookupArchive } from "@subsquid/archive-registry";
-import { CHAIN_NODE, contract, createContractEntity, getContractEntity } from "./contract";
+import { CHAIN_NODE, contract, createContractEntity, getContractEntity, getTokenURI } from "./contract";
 import * as erc721 from "./abi/erc721";
 import { Owner, Token, Transfer } from "./model";
 
@@ -52,7 +52,7 @@ export async function contractLogsHandler(
   if (token == null) {
     token = new Token({
       id: transfer.tokenId.toString(),
-      uri: await contract.tokenURI(transfer.tokenId),
+      uri: await getTokenURI(transfer.tokenId),
       contract: await getContractEntity(ctx),
       owner: to,
     });
