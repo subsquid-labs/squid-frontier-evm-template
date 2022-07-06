@@ -2,6 +2,10 @@ process: migrate
 	@node -r dotenv/config lib/processor.js
 
 
+build:
+	@npm run build
+
+
 serve:
 	@npx squid-graphql-server
 
@@ -14,27 +18,12 @@ migration:
 	@npx squid-typeorm-migration generate
 
 
-build:
-	@npm run build
-
-
 codegen:
 	@npx squid-typeorm-codegen
 
 
-typegen: moonbeamVersions.json
+typegen:
 	@npx squid-substrate-typegen typegen.json
-
-
-moonbeamVersions.json:
-	@make explore
-
-
-explore:
-	@npx squid-substrate-metadata-explorer \
-		--chain wss://wss.api.moonriver.moonbeam.network \
-		--archive https://moonriver-beta.indexer.gc.subsquid.io/v4/graphql \
-		--out moonbeamVersions.json
 
 
 up:
@@ -45,4 +34,4 @@ down:
 	@docker-compose down
 
 
-.PHONY: process serve start codegen migration migrate up down
+.PHONY: build serve process migrate codegen typegen up down
