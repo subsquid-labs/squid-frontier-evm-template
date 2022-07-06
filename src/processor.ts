@@ -128,27 +128,6 @@ function handleTransfer(
     "Transfer(address,address,uint256)"
   ].decode(event.args);
 
-  // let from = await ctx.store.get(Owner, data.from);
-  // if (from == null) {
-  //   from = new Owner({ id: data.from, balance: 0n });
-  //   await ctx.store.save(from);
-  // }
-
-  // // let to = await ctx.store.get(Owner, data.to);
-  // // if (to == null) {
-  // //   to = new Owner({ id: data.to, balance: 0n });
-  // //   await ctx.store.save(to);
-  // // }
-
-  // // let token = await ctx.store.get(Token, data.tokenId.toString());
-  // // if (token == null) {
-  // //   token = new Token({
-  // //     id: data.tokenId.toString(),
-  // //     uri: await getTokenURI(data.tokenId.toString()),
-  // //     contract: await getContractEntity(ctx.store),
-  // //   });
-  // // }
-
   const transfer: TransferData = {
     id: event.id,
     token: tokenId.toString(),
