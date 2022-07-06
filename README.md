@@ -1,4 +1,4 @@
-# squid-template
+# EVM squid template (FireSquid edition)
 
 This is a FireSquid version of the sample [squid](https://subsquid.io) showcasing EVM log indexing for substrate chains with a Frontier EVM pallete, like Astar or Moonbeam. This template indexes [Moonsama](https://moonsama.com/) token transfers over the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via graphql API.
 
