@@ -33,20 +33,60 @@ type Item = BatchProcessorItem<typeof processor>;
 type Context = BatchContext<Store, Item>;
 
 processor.run(database, async (ctx) => {
-  const transfersData: Set<TransferData> = new Set();
-  const tokensIds: Set<string> = new Set();
-  const ownersIds: Set<string> = new Set();
+  const transfersData: TransferData[] = [];
 
   for (const block of ctx.blocks) {
     for (const item of block.items) {
       if (item.name === "EVM.Log") {
         const transfer = handleTransfer(ctx, block.header, item.event);
-        transfersData.add(transfer);
-        tokensIds.add(transfer.token);
-        ownersIds.add(transfer.from);
-        ownersIds.add(transfer.to);
+        transfersData.push(transfer);
       }
     }
+  }
+
+  await saveTransfers(ctx, transfersData);
+});
+
+type TransferData = {
+  id: string;
+  from: string;
+  to: string;
+  token: string;
+  timestamp: bigint;
+  block: number;
+  transactionHash: string;
+};
+
+function handleTransfer(
+  ctx: Context,
+  block: SubstrateBlock,
+  event: EvmLogEvent
+): TransferData {
+  const { from, to, tokenId } = erc721.events[
+    "Transfer(address,address,uint256)"
+  ].decode(event.args);
+
+  const transfer: TransferData = {
+    id: event.id,
+    token: tokenId.toString(),
+    from,
+    to,
+    timestamp: BigInt(block.timestamp),
+    block: block.height,
+    transactionHash: event.evmTxHash,
+  };
+
+  return transfer;
+}
+
+async function saveTransfers(ctx: Context, transfersData: TransferData[]) {
+  const tokensIds: Set<string> = new Set();
+  const ownersIds: Set<string> = new Set();
+
+  for (const transferData of transfersData) {
+    tokensIds.add(transferData.token);
+    ownersIds.add(transferData.from);
+    ownersIds.add(transferData.to);
   }
 
   const transfers: Set<Transfer> = new Set();
@@ -107,36 +147,4 @@ processor.run(database, async (ctx) => {
   await ctx.store.save([...owners.values()]);
   await ctx.store.save([...tokens.values()]);
   await ctx.store.save([...transfers]);
-});
-
-type TransferData = {
-  id: string;
-  from: string;
-  to: string;
-  token: string;
-  timestamp: bigint;
-  block: number;
-  transactionHash: string;
-};
-
-function handleTransfer(
-  ctx: Context,
-  block: SubstrateBlock,
-  event: EvmLogEvent
-): TransferData {
-  const { from, to, tokenId } = erc721.events[
-    "Transfer(address,address,uint256)"
-  ].decode(event.args);
-
-  const transfer: TransferData = {
-    id: event.id,
-    token: tokenId.toString(),
-    from,
-    to,
-    timestamp: BigInt(block.timestamp),
-    block: block.height,
-    transactionHash: event.evmTxHash,
-  };
-
-  return transfer;
 }
