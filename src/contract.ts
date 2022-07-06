@@ -1,7 +1,7 @@
-import {assertNotNull, Store} from "@subsquid/substrate-evm-processor";
-import {ethers} from "ethers";
+import { Store } from "@subsquid/typeorm-store";
+import { ethers } from "ethers";
 import * as erc721 from "./abi/erc721";
-import {Contract} from "./model";
+import { Contract } from "./model";
 
 export const CHAIN_NODE = "wss://wss.api.moonriver.moonbeam.network";
 
@@ -22,15 +22,15 @@ export function createContractEntity(): Contract {
 
 let contractEntity: Contract | undefined;
 
-export async function getContractEntity({
-  store,
-}: {
-  store: Store;
-}): Promise<Contract> {
+export async function getContractEntity(store: Store): Promise<Contract> {
   if (contractEntity == null) {
     contractEntity = await store.get(Contract, contract.address);
+    if (contractEntity == null) {
+      contractEntity = createContractEntity();
+      await store.insert(contractEntity);
+    }
   }
-  return assertNotNull(contractEntity);
+  return contractEntity;
 }
 
 export async function getTokenURI(address: string): Promise<string> {
@@ -44,11 +44,13 @@ async function timeout<T>(res: Promise<T>, seconds = 30): Promise<T> {
       reject(new Error(`Request timed out in ${seconds} seconds`));
     }, seconds * 1000);
 
-    res.finally(() => {
-      if (timer != null) {
-        clearTimeout(timer);
-      }
-    }).then(resolve, reject);
+    res
+      .finally(() => {
+        if (timer != null) {
+          clearTimeout(timer);
+        }
+      })
+      .then(resolve, reject);
   });
 }
 
