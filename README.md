@@ -1,6 +1,6 @@
 # Minimal Ethereum mainnet squid
 
-This is a minimal runnable template of a squid run against an Ethereum mainnet. It does not index any data. To index Ethereum transaction and event data, modify `src/processor.ts` and subscribe to EVM logs and transactions. 
+This is a minimal runnable template of a squid indexing the Ethereum mainnet. To add indexing of Ethereum transactions and events, modify `src/processor.ts` and subscribe to EVM logs and transactions. 
 
 For a step-by-step migration guide from TheGraph, see [the dedicated docs page](https://docs.subsquid.io/migrate/migrate-subgraph/).
 
