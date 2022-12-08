@@ -9,17 +9,20 @@ import {
 } from "@subsquid/substrate-processor";
 import { In } from "typeorm";
 import { ethers } from "ethers";
-import { CHAIN_NODE, contractAddress, getContractEntity } from "./contract";
+import { contractAddress, getContractEntity } from "./contract";
 import { Owner, Token, Transfer } from "./model";
 import * as erc721 from "./abi/erc721";
+import assert from 'assert';
 
 const database = new TypeormDatabase();
+
+assert(process.env.RPC_ENDPOINT, `RPC_ENDPOINT endpoint should be set to enable contract state queries`)
+
 const processor = new SubstrateBatchProcessor()
   .setDataSource({
-    chain: CHAIN_NODE,
+    chain: process.env.RPC_ENDPOINT,
     archive: lookupArchive("moonriver", { release: "FireSquid" }),
   })
-  .setTypesBundle("moonbeam")
   .addEvmLog(contractAddress, {
     filter: [[
       erc721.events.Transfer.topic

@@ -1,8 +1,6 @@
 import { Store } from "@subsquid/typeorm-store";
 import { Contract } from "./model";
 
-export const CHAIN_NODE = "wss://wss.api.moonriver.moonbeam.network";
-
 export const contractAddress = "0xb654611f84a8dc429ba3cb4fda9fad236c505a1a";
 export const MULTICALL_CONTRACT='0x83e3b61886770de2F64AAcaD2724ED4f08F7f36B'
 
