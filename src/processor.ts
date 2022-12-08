@@ -15,14 +15,15 @@ import * as erc721 from "./abi/erc721";
 
 const database = new TypeormDatabase();
 const processor = new SubstrateBatchProcessor()
-  .setBatchSize(500)
   .setDataSource({
     chain: CHAIN_NODE,
     archive: lookupArchive("moonriver", { release: "FireSquid" }),
   })
   .setTypesBundle("moonbeam")
   .addEvmLog(contractAddress, {
-    filter: [erc721.events["Transfer(address,address,uint256)"].topic],
+    filter: [[
+      erc721.events.Transfer.topic
+    ]],
   });
 
 type Item = BatchProcessorItem<typeof processor>;
@@ -58,9 +59,7 @@ function handleTransfer(
   block: SubstrateBlock,
   event: EvmLogEvent
 ): TransferData {
-  const { from, to, tokenId } = erc721.events[
-    "Transfer(address,address,uint256)"
-  ].decode(((event.args.log || event.args)));
+  const { from, to, tokenId } = erc721.events.Transfer.decode(((event.args.log || event.args)));
 
   const transfer: TransferData = {
     id: event.id,
@@ -130,6 +129,7 @@ async function saveTransfers(ctx: Context, transfersData: TransferData[]) {
         contract: await getContractEntity(ctx.store),
       });
       tokens.set(token.id, token);
+      ctx.log.info(`Upserted NFT: ${token.id}`)
     }
     token.owner = to;
 

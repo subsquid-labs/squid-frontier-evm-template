@@ -69,14 +69,15 @@ npx squid-typeorm-migration revert
 
 ### 4. Import ABI contract and generate interfaces to decode events
 
-It is necessary to import the respective ABI definition to decode EVM logs. For Moonsama transfers we use the standard ERC721 interface, see [`src/abis/ERC721.json`](src/abis/ERC721.json).
+It is necessary to import the respective ABI definition to decode EVM logs. For Moonsama transfers we use the standard ERC721 interface, see [`assets/ERC721.json`](assets/ERC721.json).
 
 To generate a type-safe facade class to decode EVM logs, use `squid-evm-typegen(1)`:
 
 ```bash
-npx squid-evm-typegen --abi src/abi/ERC721.json --output src/abi/erc721.ts
+npx squid-evm-typegen src/abi assets/ERC721.json#erc721
 ```
 
+See more details on the [`evm-typegen` doc page](https://docs.subsquid.io/develop-a-squid/typegen/squid-evm-typegen/)
 
 ## Project conventions
 
@@ -87,7 +88,7 @@ The layout of `lib` must reflect `src`.
 * All TypeORM classes must be exported by `src/model/index.ts` (`lib/model` module).
 * Database schema must be defined in `schema.graphql`.
 * Database migrations must reside in `db/migrations` and must be plain js files.
-* `sqd(1)` and `squid-*(1)` executables consult `.env` file for a number of environment variables.
+* `sqd(1)` and `squid-*(1)` executables consult `.env` file for environment variables.
 
 ## Graphql server extensions
 
