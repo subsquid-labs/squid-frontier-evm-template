@@ -1,11 +1,12 @@
-# EVM squid template (FireSquid edition)
+# Frontier EVM squid template 
 
-This is a FireSquid version of the sample [squid](https://subsquid.io) showcasing EVM log indexing for substrate chains with a Frontier EVM pallete, like Astar or Moonbeam. This template indexes [Moonsama](https://moonsama.com/) token transfers over the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via graphql API.
+This is a template squid for indexing EVM contracts deployed to chains with Frontier EVM support (Moonbeam, Moonriver, Shiden, Astar). This template indexes token transfers on the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via Graphql API.
 
 ## Quickstart
 
 ```bash
-# 1. Install dependencies
+# 1. Update the Squid SDK and install dependencies
+npm run update
 npm ci
 
 # 2. Compile typescript files
@@ -25,10 +26,6 @@ make process
 #    and run
 make serve
 ```
-
-## Migrate from v5 to FireSquid
-
-To migrate old (v5) Squids to FireSquid, follow the [Migration Guide](https://docs.subsquid.io/docs/guides/migrate-to-fire-squid/)
 
 ## Dev flow
 
