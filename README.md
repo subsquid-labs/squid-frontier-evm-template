@@ -1,6 +1,8 @@
 # Frontier EVM squid template 
 
-This is a template squid for indexing EVM contracts deployed to chains with Frontier EVM support (Moonbeam, Moonriver, Shiden, Astar). This template indexes token transfers on the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via Graphql API.
+This is a template squid for indexing EVM contracts deployed to chains with Frontier EVM support (Moonbeam, Moonriver, Shiden, Astar). This template indexes token transfers on the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via GraphQL API.
+
+For more details, consult the [Squid SDK docs](https://docs.subsquid.io/develop-a-squid/)
 
 ## Quickstart
 
@@ -87,12 +89,4 @@ The layout of `lib` must reflect `src`.
 * Database migrations must reside in `db/migrations` and must be plain js files.
 * `sqd(1)` and `squid-*(1)` executables consult `.env` file for environment variables.
 
-## Graphql server extensions
 
-It is possible to extend `squid-graphql-server(1)` with custom
-[type-graphql](https://typegraphql.com) resolvers and to add request validation.
-More details will be added later.
-
-## Disclaimer
-
-This is alpha-quality software. Expect some bugs and incompatible changes in coming weeks.
