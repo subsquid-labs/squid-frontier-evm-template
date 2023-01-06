@@ -15,6 +15,7 @@
     "@subsquid/graphql-server": "3.3.0",
     "@subsquid/ss58": "0.1.2",
     "@subsquid/substrate-processor": "2.2.0",
+    "@subsquid/typeorm-migration": "0.1.4",
     "@subsquid/typeorm-store": "0.2.0",
     "dotenv": "^16.0.0",
     "ethers": "^5.6.4",
@@ -22,7 +23,6 @@
     "typeorm": "^0.3.6"
   },
   "devDependencies": {
-    "@subsquid/typeorm-migration": "0.1.4",
     "@subsquid/evm-typegen": "2.0.2",
     "@subsquid/substrate-metadata-explorer": "1.0.9",
     "@subsquid/substrate-typegen": "2.0.0",
