@@ -12,16 +12,15 @@ import { ethers } from "ethers";
 import { contractAddress, getContractEntity } from "./contract";
 import { Owner, Token, Transfer } from "./model";
 import * as erc721 from "./abi/erc721";
-import assert from 'assert';
 
 const database = new TypeormDatabase();
 
-assert(process.env.RPC_ENDPOINT, `RPC_ENDPOINT endpoint should be set to enable contract state queries`)
-
 const processor = new SubstrateBatchProcessor()
   .setDataSource({
-    chain: process.env.RPC_ENDPOINT,
-    archive: lookupArchive("moonriver", { release: "FireSquid" }),
+    // FIXME: set RPC_ENDPOINT secret when deploying to Aquarium
+    //        See https://docs.subsquid.io/deploy-squid/env-variables/
+    chain: process.env.RPC_ENDPOINT || 'wss://wss.api.moonriver.moonbeam.network',
+    archive: lookupArchive("moonriver"),
   })
   .addEvmLog(contractAddress, {
     filter: [[
@@ -102,6 +101,10 @@ async function saveTransfers(ctx: Context, transfersData: TransferData[]) {
       owner,
     ])
   );
+  
+  if (process.env.RPC_ENDPOINT == undefined) {
+    ctx.log.warn(`RPC_ENDPOINT env variable is not set`)
+  }
 
   for (const transferData of transfersData) {
     const contract = new erc721.Contract(
