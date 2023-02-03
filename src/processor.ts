@@ -12,6 +12,7 @@ import { ethers } from "ethers";
 import { contractAddress, getContractEntity } from "./contract";
 import { Owner, Token, Transfer } from "./model";
 import * as erc721 from "./abi/erc721";
+import { EvmLog, getEvmLog } from "@subsquid/frontier";
 
 const database = new TypeormDatabase();
 
@@ -25,7 +26,7 @@ const processor = new SubstrateBatchProcessor()
   .addEvmLog(contractAddress, {
     filter: [[
       erc721.events.Transfer.topic
-    ]],
+    ]], 
   });
 
 type Item = BatchProcessorItem<typeof processor>;
@@ -37,7 +38,9 @@ processor.run(database, async (ctx) => {
   for (const block of ctx.blocks) {
     for (const item of block.items) {
       if (item.name === "EVM.Log") {
-        const transfer = handleTransfer(ctx, block.header, item.event);
+        // EVM log extracted from the substrate event
+        const evmLog = getEvmLog(ctx, item.event)
+        const transfer = handleTransfer(block.header, item.event, evmLog);
         transfersData.push(transfer);
       }
     }
@@ -57,11 +60,11 @@ type TransferData = {
 };
 
 function handleTransfer(
-  ctx: Context,
   block: SubstrateBlock,
-  event: EvmLogEvent
+  event: EvmLogEvent,
+  evmLog: EvmLog
 ): TransferData {
-  const { from, to, tokenId } = erc721.events.Transfer.decode(((event.args.log || event.args)));
+  const { from, to, tokenId } = erc721.events.Transfer.decode(evmLog);
 
   const transfer: TransferData = {
     id: event.id,
@@ -131,6 +134,8 @@ async function saveTransfers(ctx: Context, transfersData: TransferData[]) {
     if (token == null) {
       token = new Token({
         id: tokenId,
+        // FIXME: use multicall here to batch
+        //        contract calls and speed up indexing
         uri: await contract.tokenURI(transferData.token),
         contract: await getContractEntity(ctx.store),
       });
