@@ -20,8 +20,8 @@ const processor = new SubstrateBatchProcessor()
   .setDataSource({
     // FIXME: set RPC_ENDPOINT secret when deploying to Aquarium
     //        See https://docs.subsquid.io/deploy-squid/env-variables/
-    chain: process.env.RPC_ENDPOINT || 'wss://wss.api.moonriver.moonbeam.network',
-    archive: lookupArchive("moonriver"),
+    chain: process.env.RPC_ENDPOINT || "wss://wss.api.moonriver.moonbeam.network",
+    archive: lookupArchive("moonriver", {type: "Substrate"}),
   })
   .addEvmLog(contractAddress, {
     filter: [[
