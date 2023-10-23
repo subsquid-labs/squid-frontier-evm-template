@@ -18,7 +18,6 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const transfersData: TransferData[] = []
 
     for (const block of ctx.blocks) {
-        if (block.header.height==0) continue
         assert(block.header.timestamp, `Block ${block.header.height} arrived without a timestamp`)
         for (const event of block.events) {
             if (event.name === 'EVM.Log') {
@@ -28,7 +27,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                 if (evmLog.address !== CONTRACT_ADDRESS) {
                     ctx.log.error(`Got a EVM.Log from a non-requested address ${evmLog.address}`)
                     continue
-                } 
+                }
                 const {from, to, tokenId: token} = erc721.events.Transfer.decode(evmLog)
                 transfersData.push({
                     id: event.id,
@@ -37,7 +36,6 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     to,
                     timestamp: BigInt(block.header.timestamp),
                     block: block.header.height,
-                    transactionHash: event.args[2] || event.args.transactionHash, // BUG: the approach does not work
                     extrinsicHash: event.extrinsic.hash
                 })
             }
@@ -58,7 +56,6 @@ type TransferData = {
     token: bigint
     timestamp: bigint
     block: number
-    transactionHash: string
     extrinsicHash: string
 }
 
@@ -71,11 +68,6 @@ async function createTokens(ctx: ProcessorContext<Store>, transfersData: Transfe
         (await ctx.store.findBy(Token, {id: In([...tokensIds])})).map((token) => [token.id, token])
     )
 
-    // BUG: getting a BlockContext shouldn't be this complicated
-    const lastBlockHeader: Block = last(ctx.blocks).header
-    const client = ctx._chain.rpc
-    const contract = new erc721.Contract({block: lastBlockHeader, _chain: {client}}, CONTRACT_ADDRESS)
-
     for (const trd of transfersData) {
         const tokenId = trd.token.toString()
         if (tokens.has(tokenId)) {
@@ -84,9 +76,6 @@ async function createTokens(ctx: ProcessorContext<Store>, transfersData: Transfe
         else {
             tokens.set(tokenId, new Token({
                 id: tokenId,
-                // TODO: use multicall here to batch
-                //        contract calls and speed up indexing
-                uri: await contract.tokenURI(trd.token),
                 owner: trd.to
             }))
         }

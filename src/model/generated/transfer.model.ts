@@ -28,8 +28,5 @@ export class Transfer {
     block!: number
 
     @Column_("text", {nullable: false})
-    transactionHash!: string
-
-    @Column_("text", {nullable: false})
     extrinsicHash!: string
 }

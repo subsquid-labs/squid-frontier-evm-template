@@ -13,9 +13,6 @@ export class Token {
     @Column_("text", {nullable: false})
     owner!: string
 
-    @Column_("text", {nullable: true})
-    uri!: string | undefined | null
-
     @OneToMany_(() => Transfer, e => e.token)
     transfers!: Transfer[]
 }

@@ -1,7 +1,6 @@
 type Token @entity {
   id: ID!
   owner: String!
-  uri: String
   transfers: [Transfer!]! @derivedFrom(field: "token")
 }
 
@@ -12,6 +11,5 @@ type Transfer @entity {
   to: String!
   timestamp: BigInt!
   block: Int!
-  transactionHash: String!
 	extrinsicHash: String!
 }
