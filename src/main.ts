@@ -47,8 +47,8 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const tokens: Map<string, Token> = await createTokens(ctx, transfersData)
     const transfers: Transfer[] = createTransfers(transfersData, tokens)
 
-    ctx.store.upsert([...tokens.values()])
-    ctx.store.insert(transfers)
+    await ctx.store.upsert([...tokens.values()])
+    await ctx.store.insert(transfers)
 })
 
 type TransferData = {
