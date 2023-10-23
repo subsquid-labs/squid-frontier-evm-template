@@ -1,27 +1,54 @@
+import assert from 'assert'
 import {In} from 'typeorm'
-import {EvmLog, getEvmLog} from '@subsquid/frontier'
-import {EvmLogEvent, SubstrateBlock} from '@subsquid/substrate-processor'
-import {Store, TypeormDatabase} from '@subsquid/typeorm-store'
-import * as erc721 from './abi/erc721'
-import {getContractEntity} from './contract'
-import {Owner, Token, Transfer} from './model'
-import {CONTRACT_ADDRESS, ProcessorContext, processor} from './processor'
 
-processor.run(new TypeormDatabase(), async (ctx) => {
+import {EvmLog, getEvmLog} from '@subsquid/frontier'
+import {Store, TypeormDatabase} from '@subsquid/typeorm-store'
+import {last} from '@subsquid/util-internal'
+
+import * as erc721 from './abi/erc721'
+import {Token, Transfer} from './model'
+import {
+    processor,
+    CONTRACT_ADDRESS,
+    ProcessorContext,
+    Block
+} from './processor'
+
+processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const transfersData: TransferData[] = []
 
     for (const block of ctx.blocks) {
-        for (const item of block.items) {
-            if (item.name === 'EVM.Log') {
+        if (block.header.height==0) continue
+        assert(block.header.timestamp, `Block ${block.header.height} arrived without a timestamp`)
+        for (const event of block.events) {
+            if (event.name === 'EVM.Log') {
+                assert(event.extrinsic, `Event ${event} arrived without a parent extrinsic`)
                 // EVM log extracted from the substrate event
-                const evmLog = getEvmLog(ctx, item.event)
-                const transfer = handleTransfer(block.header, item.event, evmLog)
-                transfersData.push(transfer)
+                const evmLog = getEvmLog(event)
+                if (evmLog.address !== CONTRACT_ADDRESS) {
+                    ctx.log.error(`Got a EVM.Log from a non-requested address ${evmLog.address}`)
+                    continue
+                } 
+                const {from, to, tokenId: token} = erc721.events.Transfer.decode(evmLog)
+                transfersData.push({
+                    id: event.id,
+                    token,
+                    from,
+                    to,
+                    timestamp: BigInt(block.header.timestamp),
+                    block: block.header.height,
+                    transactionHash: event.args[2] || event.args.transactionHash, // BUG: the approach does not work
+                    extrinsicHash: event.extrinsic.hash
+                })
             }
         }
     }
 
-    await saveTransfers(ctx, transfersData)
+    const tokens: Map<string, Token> = await createTokens(ctx, transfersData)
+    const transfers: Transfer[] = createTransfers(transfersData, tokens)
+
+    ctx.store.upsert([...tokens.values()])
+    ctx.store.insert(transfers)
 })
 
 type TransferData = {
@@ -32,95 +59,47 @@ type TransferData = {
     timestamp: bigint
     block: number
     transactionHash: string
+    extrinsicHash: string
 }
 
-function handleTransfer(block: SubstrateBlock, event: EvmLogEvent, evmLog: EvmLog): TransferData {
-    const {from, to, tokenId} = erc721.events.Transfer.decode(evmLog)
-
-    const transfer: TransferData = {
-        id: event.id,
-        token: tokenId,
-        from,
-        to,
-        timestamp: BigInt(block.timestamp),
-        block: block.height,
-        transactionHash: event.evmTxHash,
-    }
-
-    return transfer
-}
-
-async function saveTransfers(ctx: ProcessorContext<Store>, transfersData: TransferData[]) {
+async function createTokens(ctx: ProcessorContext<Store>, transfersData: TransferData[]): Promise<Map<string, Token>> {
     const tokensIds: Set<string> = new Set()
-    const ownersIds: Set<string> = new Set()
-
-    for (const transferData of transfersData) {
-        tokensIds.add(transferData.token.toString())
-        ownersIds.add(transferData.from)
-        ownersIds.add(transferData.to)
+    for (const trd of transfersData) {
+        tokensIds.add(trd.token.toString())
     }
-
-    const transfers: Set<Transfer> = new Set()
-
     const tokens: Map<string, Token> = new Map(
         (await ctx.store.findBy(Token, {id: In([...tokensIds])})).map((token) => [token.id, token])
     )
 
-    const owners: Map<string, Owner> = new Map(
-        (await ctx.store.findBy(Owner, {id: In([...ownersIds])})).map((owner) => [owner.id, owner])
-    )
+    // BUG: getting a BlockContext shouldn't be this complicated
+    const lastBlockHeader: Block = last(ctx.blocks).header
+    const client = ctx._chain.rpc
+    const contract = new erc721.Contract({block: lastBlockHeader, _chain: {client}}, CONTRACT_ADDRESS)
 
-    if (process.env.RPC_ENDPOINT == undefined) {
-        ctx.log.warn(`RPC_ENDPOINT env variable is not set`)
-    }
-
-    for (const transferData of transfersData) {
-        const contract = new erc721.Contract(ctx, {height: transferData.block}, CONTRACT_ADDRESS)
-
-        let from = owners.get(transferData.from)
-        if (from == null) {
-            from = new Owner({id: transferData.from, balance: 0n})
-            owners.set(from.id, from)
+    for (const trd of transfersData) {
+        const tokenId = trd.token.toString()
+        if (tokens.has(tokenId)) {
+            tokens.get(tokenId)!.owner = trd.to
         }
-
-        let to = owners.get(transferData.to)
-        if (to == null) {
-            to = new Owner({id: transferData.to, balance: 0n})
-            owners.set(to.id, to)
-        }
-
-        const tokenId = transferData.token.toString()
-
-        let token = tokens.get(tokenId)
-        if (token == null) {
-            token = new Token({
+        else {
+            tokens.set(tokenId, new Token({
                 id: tokenId,
                 // TODO: use multicall here to batch
                 //        contract calls and speed up indexing
-                uri: await contract.tokenURI(transferData.token),
-                contract: await getContractEntity(ctx.store),
-            })
-            tokens.set(token.id, token)
-            ctx.log.info(`Upserted NFT: ${token.id}`)
+                uri: await contract.tokenURI(trd.token),
+                owner: trd.to
+            }))
         }
-        token.owner = to
-
-        const {id, block, transactionHash, timestamp} = transferData
-
-        const transfer = new Transfer({
-            id,
-            block,
-            timestamp,
-            transactionHash,
-            from,
-            to,
-            token,
-        })
-
-        transfers.add(transfer)
     }
 
-    await ctx.store.save([...owners.values()])
-    await ctx.store.save([...tokens.values()])
-    await ctx.store.save([...transfers])
+    return tokens
+}
+
+function createTransfers(transfersData: TransferData[], tokens: Map<string,Token>): Transfer[] {
+    return transfersData.map(tdata => {
+        return new Transfer({
+            ...tdata,
+            token: tokens.get(tdata.token.toString())
+        })
+    })
 }
