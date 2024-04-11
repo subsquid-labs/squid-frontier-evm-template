@@ -1,5 +1,4 @@
 import {assertNotNull} from '@subsquid/util-internal'
-import {lookupArchive} from '@subsquid/archive-registry'
 import {
     BlockHeader,
     DataHandlerContext,
@@ -16,7 +15,7 @@ export const CONTRACT_ADDRESS = '0xb654611f84a8dc429ba3cb4fda9fad236c505a1a'
 export const processor = new SubstrateBatchProcessor()
     // Lookup archive by the network name in Subsquid registry
     // See https://docs.subsquid.io/substrate-indexing/supported-networks/
-    .setGateway(lookupArchive('moonriver', {type: 'Substrate', release: 'ArrowSquid'}))
+    .setGateway('https://v2.archive.subsquid.io/network/moonriver-substrate')
     // Chain RPC endpoint is required on Substrate for metadata and real-time updates
     .setRpcEndpoint({
         // Set via .env for local runs or via secrets when deploying to Subsquid Cloud
