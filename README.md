@@ -17,7 +17,7 @@ sqd init my_squid_name -t frontier-evm
 cd my_squid_name
 
 # 2. Install dependencies
-npm ci
+npm i
 
 # 3. Start a Postgres database container and detach
 sqd up
