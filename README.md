@@ -1,10 +1,12 @@
-# Frontier EVM squid template 
+# Frontier EVM (Moonbeam / Astar) indexer template (Squid SDK)
 
 This is a template squid for indexing EVM contracts deployed to chains with Frontier EVM support (Moonbeam, Moonriver, Shiden, Astar). This template indexes token transfers on the [Moonriver network](https://moonbeam.network/networks/moonriver/) and serves them via GraphQL API.
 
-For more details, consult the [Squid SDK docs](https://docs.subsquid.io/)
+For more details, consult the [Squid SDK docs](https://docs.sqd.dev/en/sdk).
 
-Dependencies: Node.js v16 or newer, Git, Docker.
+Documentation: [docs.sqd.dev](https://docs.sqd.dev) | Website: [sqd.dev](https://sqd.dev)
+
+Dependencies: Node.js 20 or newer, Git, Docker.
 
 ## Quickstart
 
@@ -42,7 +44,7 @@ sqd serve
 
 Start development by defining the schema of the target database via `schema.graphql`.
 Schema definition consists of regular graphql type declarations annotated with custom directives.
-Full description of `schema.graphql` dialect is available [here](https://docs.subsquid.io/basics/schema-file).
+Full description of `schema.graphql` dialect is available [here](https://docs.sqd.dev/en/sdk/squid-sdk/reference/schema-file/intro).
 
 ### 2. Generate TypeORM classes
 
@@ -64,7 +66,7 @@ sqd up
 ## replace any old schemas with a new one made from the entities
 sqd migration:generate
 ```
-See [docs on database migrations](https://docs.subsquid.io/basics/db-migrations) for more details.
+See [docs on database migrations](https://docs.sqd.dev/en/sdk/squid-sdk/resources/tools/migrations-gen) for more details.
 
 ### 4. Import ABI contract and generate interfaces to decode events
 
@@ -76,11 +78,11 @@ To generate a type-safe facade class to decode EVM logs, use `squid-evm-typegen(
 sqd typegen
 ```
 
-See more details on the [`squid-evm-typegen` doc page](https://docs.subsquid.io/evm-indexing/squid-evm-typegen)
+See more details on the [`squid-evm-typegen` doc page](https://docs.sqd.dev/en/sdk/squid-sdk/resources/tools/typegen/generation).
 
 ## Project conventions
 
-Squid tools assume a certain [project layout](https://docs.subsquid.io/basics/squid-structure):
+Squid tools assume a certain [project layout](https://docs.sqd.dev/en/sdk/squid-sdk/how-to-start/layout):
 
 * All compiled js files must reside in `lib` and all TypeScript sources in `src`.
 The layout of `lib` must reflect `src`.
