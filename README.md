@@ -8,6 +8,27 @@ Documentation: [docs.sqd.dev](https://docs.sqd.dev) | Website: [sqd.dev](https:/
 
 Dependencies: Node.js 20 or newer, Git, Docker.
 
+
+## Accessing the SQD Network gateway
+
+This squid sources historical data from the SQD Network v2 gateway
+(`https://v2.archive.subsquid.io/network/moonriver-substrate`). Since May 19, 2026, **self-hosted** squids need an
+API key to access these gateways (see [SQD API keys](https://docs.sqd.dev/en/data/api-keys)):
+
+1. Create a key at [portal.sqd.dev/app](https://portal.sqd.dev/app).
+2. Add it to `.env`: `SQD_API_KEY=your_api_key`.
+3. Pass it to the `.setGateway(...)` call in `src/processor.ts`:
+
+   ```ts
+   .setGateway({
+       url: 'https://v2.archive.subsquid.io/network/moonriver-substrate',
+       apiKey: process.env.SQD_API_KEY,
+   })
+   ```
+
+Squids deployed to [SQD Cloud](https://docs.sqd.dev/en/cloud/overview) don't need this — the
+platform provides gateway access.
+
 ## Quickstart
 
 ```bash
@@ -44,7 +65,7 @@ sqd serve
 
 Start development by defining the schema of the target database via `schema.graphql`.
 Schema definition consists of regular graphql type declarations annotated with custom directives.
-Full description of `schema.graphql` dialect is available [here](https://docs.sqd.dev/en/sdk/squid-sdk/reference/schema-file/intro).
+Full description of `schema.graphql` dialect is available [here](https://docs.sqd.dev/en/sdk/squid-sdk/substrate/reference/schema-files/schema-files-codegen).
 
 ### 2. Generate TypeORM classes
 
@@ -66,7 +87,7 @@ sqd up
 ## replace any old schemas with a new one made from the entities
 sqd migration:generate
 ```
-See [docs on database migrations](https://docs.sqd.dev/en/sdk/squid-sdk/resources/tools/migrations-gen) for more details.
+See [docs on database migrations](https://docs.sqd.dev/en/sdk/squid-sdk/substrate/reference/typeorm-migration) for more details.
 
 ### 4. Import ABI contract and generate interfaces to decode events
 
@@ -78,11 +99,11 @@ To generate a type-safe facade class to decode EVM logs, use `squid-evm-typegen(
 sqd typegen
 ```
 
-See more details on the [`squid-evm-typegen` doc page](https://docs.sqd.dev/en/sdk/squid-sdk/resources/tools/typegen/generation).
+See more details on the [`squid-evm-typegen` doc page](https://docs.sqd.dev/en/sdk/squid-sdk/evm/reference/evm-typegen/generating-utility-modules).
 
 ## Project conventions
 
-Squid tools assume a certain [project layout](https://docs.sqd.dev/en/sdk/squid-sdk/how-to-start/layout):
+Squid tools assume a certain [project layout](https://docs.sqd.dev/en/sdk/squid-sdk/substrate/reference/project-structure):
 
 * All compiled js files must reside in `lib` and all TypeScript sources in `src`.
 The layout of `lib` must reflect `src`.

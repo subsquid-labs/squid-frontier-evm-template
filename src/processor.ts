@@ -13,15 +13,21 @@ import * as erc721 from './abi/erc721'
 export const CONTRACT_ADDRESS = '0xb654611f84a8dc429ba3cb4fda9fad236c505a1a'
 
 export const processor = new SubstrateBatchProcessor()
-    // Lookup archive by the network name in Subsquid registry
-    // See https://docs.subsquid.io/substrate-indexing/supported-networks/
+    // SQD Network gateway (historical data). Browse networks at
+    // https://docs.sqd.dev/en/data/substrate
     .setGateway('https://v2.archive.subsquid.io/network/moonriver-substrate')
+    // Self-hosted v2 gateways now require an API key.
+    // Create one at https://docs.sqd.dev/en/data/api-keys and supply it as:
+    // .setGateway({
+    //     url: 'https://v2.archive.subsquid.io/network/moonriver-substrate',
+    //     apiKey: process.env.SQD_API_KEY,
+    // })
     // Chain RPC endpoint is required on Substrate for metadata and real-time updates
     .setRpcEndpoint({
-        // Set via .env for local runs or via secrets when deploying to Subsquid Cloud
-        // https://docs.subsquid.io/deploy-squid/env-variables/
+        // Set via .env for local runs or via secrets when deploying to SQD Cloud
+        // https://docs.sqd.dev/en/cloud/resources/env-variables
         url: assertNotNull(process.env.RPC_MOONRIVER_SUBSTRATE_HTTP, 'No RPC endpoint supplied'),
-        // More RPC connection options at https://docs.subsquid.io/substrate-indexing/setup/general/#set-data-source
+        // More RPC connection options at https://docs.sqd.dev/en/sdk/squid-sdk/substrate/reference/substrate-processor/general
         rateLimit: 10
     })
     .addEvmLog({
